@@ -1,2 +1,2 @@
-Phases 1–6 implemented: local autosave, evidence retrieval and bounded extractive state/prompt assembly.
-Current: turn detection and suggestions.
+Phases 1–7 implemented: acoustic pause, semantic heuristics, fallback gate and unique frozen turn snapshots.
+Current: concurrent model requests.
