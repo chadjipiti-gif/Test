@@ -1,2 +1,2 @@
-Phases 1–8 implemented: independent concurrent OpenRouter paths, stable buffered cards, model cancellation and request versions. Core test execution recorded in final report.
-Current: Realtime integration.
+Phases 1–9 implemented and cross-built. Realtime adapter is real (GA schema, native PCM), cleanly disabled with None; no live API verification without keys.
+Current: diagnostics, resilience, Windows packaging and documentation.
