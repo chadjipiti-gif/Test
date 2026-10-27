@@ -1,2 +1,2 @@
-Phases 1–4 implemented; capture code builds. Microphone and endpoint loopback need Windows hardware validation. No process-loopback or AEC implementation.
-Current: transcription.
+Phases 1–5 implemented and cross-build passed. Live STT and device loss/reconnect tests require credentials/Windows.
+Current: context/retrieval and turn detection.
