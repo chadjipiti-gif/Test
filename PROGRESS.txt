@@ -1,2 +1,2 @@
-Phases 1–5 implemented and cross-build passed. Live STT and device loss/reconnect tests require credentials/Windows.
-Current: context/retrieval and turn detection.
+Phases 1–6 implemented: local autosave, evidence retrieval and bounded extractive state/prompt assembly.
+Current: turn detection and suggestions.
