@@ -1,1 +1,23 @@
-<Window x:Class="Copilot.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Private Conversation Copilot" Width="1100" Height="950"><StackPanel><TextBlock Text="Private Conversation Copilot" FontSize="24"/><Button Content="Settings" Click="Settings_Click"/></StackPanel></Window>
+<Window x:Class="Copilot.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Private Conversation Copilot" Width="1100" Height="950" MinWidth="820" MinHeight="650" Background="#F1F3F6">
+<Grid Margin="12"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions>
+<DockPanel Margin="0,0,0,10"><Button DockPanel.Dock="Right" Content="⚙" ToolTip="Settings" Click="Settings_Click"/><TextBlock Text="Private Conversation Copilot" FontSize="21" Foreground="#26364A" VerticalAlignment="Center"/></DockPanel>
+<Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="30*"/><ColumnDefinition Width="42*"/><ColumnDefinition Width="28*"/></Grid.ColumnDefinitions>
+<DockPanel Margin="0,0,8,0"><TextBlock DockPanel.Dock="Top" Text="Context / Notes" FontSize="17" Margin="4"/>
+<Expander DockPanel.Dock="Top" Header="Meeting summary" Margin="3"><StackPanel>
+<TextBlock Text="Who I am"/><TextBox x:Name="WhoMe"/><TextBlock Text="Who they are"/><TextBox x:Name="WhoThem"/><TextBlock Text="What we are discussing"/><TextBox x:Name="Discussion"/><TextBlock Text="My goal"/><TextBox x:Name="Goal"/>
+</StackPanel></Expander>
+<TextBox x:Name="Notes" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" ToolTip="Prepared facts, Q&amp;A and notes typed during the call. Saved locally."/>
+</DockPanel>
+<Grid Grid.Column="1" Margin="0,0,8,0"><Grid.RowDefinitions><RowDefinition/><RowDefinition/><RowDefinition/></Grid.RowDefinitions>
+<Border Background="White" CornerRadius="8" Margin="3" Padding="12"><DockPanel><StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="Copy" Tag="0" Click="Copy_Click"/><Button Content="Dismiss" Tag="0" Click="Dismiss_Click"/></StackPanel><TextBlock x:Name="CardA" Text="Choose a model in Settings" TextWrapping="Wrap" FontSize="20"/></DockPanel></Border>
+<Border Grid.Row="1" Background="White" CornerRadius="8" Margin="3" Padding="12"><DockPanel><StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="Copy" Tag="1" Click="Copy_Click"/><Button Content="Dismiss" Tag="1" Click="Dismiss_Click"/></StackPanel><TextBlock x:Name="CardB" Text="Choose a model in Settings" TextWrapping="Wrap" FontSize="20"/></DockPanel></Border>
+<Border Grid.Row="2" Background="White" CornerRadius="8" Margin="3" Padding="12"><DockPanel><StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="Copy" Tag="2" Click="Copy_Click"/><Button Content="Dismiss" Tag="2" Click="Dismiss_Click"/></StackPanel><TextBlock x:Name="CardC" Text="Disabled" TextWrapping="Wrap" FontSize="20"/></DockPanel></Border>
+</Grid>
+<Grid Grid.Column="2"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition/></Grid.RowDefinitions><StackPanel>
+<Button x:Name="Start" Content="Start session" Click="Start_Click"/><ComboBox x:Name="Mode" SelectedIndex="0"><ComboBoxItem Content="Clear — mic + output"/><ComboBoxItem Content="Infer — mixed microphone"/></ComboBox>
+<TextBlock Text="Microphone"/><ComboBox x:Name="Microphone" DisplayMemberPath="Name"/><TextBlock Text="Meeting output"/><ComboBox x:Name="Output" DisplayMemberPath="Name"/>
+<TextBlock Text="Transcript depth"/><ComboBox x:Name="Depth" SelectedIndex="1"><ComboBoxItem Content="Low"/><ComboBoxItem Content="Medium"/><ComboBoxItem Content="High"/><ComboBoxItem Content="Max / Auto"/></ComboBox>
+<TextBlock x:Name="Status" Text="Stopped" TextWrapping="Wrap" Margin="4"/><TextBlock x:Name="BoxStatus" TextWrapping="Wrap" Margin="4" Foreground="#546478"/>
+<Button Content="Help Me Now" Click="Help_Click"/><Button Content="Feed WAV file…" Click="Wav_Click"/>
+</StackPanel><Expander Grid.Row="1" Header="Recent transcript" IsExpanded="True"><DockPanel><Button DockPanel.Dock="Bottom" Content="Correct selected speaker" Click="Correct_Click"/><ListBox x:Name="Transcript" ScrollViewer.HorizontalScrollBarVisibility="Disabled"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="2"/></DataTemplate></ListBox.ItemTemplate></ListBox></DockPanel></Expander></Grid>
+</Grid></Grid></Window>

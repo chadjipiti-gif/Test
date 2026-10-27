@@ -1,2 +1,2 @@
-Phase 1: shell and Windows workflow created; Linux cross-build passed. Windows CI not yet run.
-Current phase: 2.
+Phases 1–2: WPF shell, three columns, summary, cards, transcript and Settings navigation implemented. Cross-build validation pending next integration.
+Current phase: 3.
