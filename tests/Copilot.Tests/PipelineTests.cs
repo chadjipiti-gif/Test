@@ -1,0 +1,26 @@
+using Copilot.Core;
+using Xunit;
+namespace Copilot.Tests;
+public class PipelineTests
+{
+ private static Diagnostics Log()=>new(Path.Combine(Path.GetTempPath(),"copilot-tests",Guid.NewGuid().ToString()));
+ private static TranscriptSegment Segment(string text,SpeakerRole role=SpeakerRole.Them,bool final=true)=>new(Guid.NewGuid(),role,text,final,TimeSpan.Zero,TimeSpan.FromSeconds(1));
+ [Fact] public void PartialsAreReplaceableAndNotCanonical(){var state=new TranscriptState();state.Update("THEM",Segment("Could",final:false));state.Update("THEM",Segment("Could you",final:false));Assert.Empty(state.Freeze().Segments);Assert.Single(state.Recent());state.Update("THEM",Segment("Could you help?"));Assert.Single(state.Freeze().Segments);Assert.Single(state.Recent());}
+ [Fact] public void FrozenSnapshotSurvivesCorrection(){var state=new TranscriptState();var seg=Segment("Yes");state.Update("THEM",seg);var before=state.Freeze();state.Correct(seg.Id,SpeakerRole.Me);Assert.Equal(SpeakerRole.Them,before.Segments[0].Role);Assert.Equal(SpeakerRole.Me,state.Freeze().Segments[0].Role);Assert.True(state.Freeze().Version>before.Version);}
+ [Fact] public void BudgetKeepsNewestFirst(){var segments=new[]{Segment("older turn"),Segment("newest turn")};var trimmed=TokenBudget.Newest(segments,TokenBudget.Estimate(segments[1].ToString()));Assert.Single(trimmed);Assert.Equal("newest turn",trimmed[0].Text);}
+ [Fact] public void RetrievalSeparatesRelevantNotesAndOrigins(){var store=new ContextStore();store.Update("Budget maximum is 5000.\n\nUnrelated holiday story.",false);store.Update("Budget maximum is 5000.\n\nUnrelated holiday story.\n\nBudget approved today.",true);var selected=new KeywordRetriever().Retrieve(store.Freeze(),"budget maximum",1000);Assert.Equal(2,selected.Count);Assert.Contains(selected,x=>x.Origin=="prepared");Assert.Contains(selected,x=>x.Origin=="current-call manual note");Assert.All(selected,x=>Assert.Null(x.Confidence));}
+ [Fact] public void AcousticAndSemanticGatesDoNotCommitDuringSpeech(){var detector=new TurnDetector(new SemanticGate(),Log());var t=DateTimeOffset.UtcNow;detector.Audio(.1,t);detector.Transcript(Segment("Can you help?"),t);Assert.False(detector.ShouldCommit(t.AddMilliseconds(400),900,3500));Assert.True(detector.ShouldCommit(t.AddMilliseconds(1000),900,3500));detector.Committed(t.AddMilliseconds(1000));Assert.False(detector.ShouldCommit(t.AddSeconds(10),900,3500));}
+ [Fact] public void IncompleteSentenceUsesFallback(){var detector=new TurnDetector(new SemanticGate(),Log());var t=DateTimeOffset.UtcNow;detector.Audio(.1,t);detector.Transcript(Segment("I think because"),t);Assert.False(detector.ShouldCommit(t.AddSeconds(1),900,3500));Assert.True(detector.ShouldCommit(t.AddSeconds(4),900,3500));}
+ [Fact] public void PromptIncludesSummaryTranscriptAndEvidence(){var store=new ContextStore();store.Update("The product budget is 5000.",false);var turn=new TurnCommit(Guid.NewGuid(),new(1,[Segment("What is the budget?")]),store.Freeze(),new("Engineer","Buyer","Product","Agreement"),new("Product","","Agreement",[],[],[],[],[],[],[],"Older discussion"),DateTimeOffset.UtcNow,DateTimeOffset.UtcNow,"What is the budget?");var prompt=new PromptAssembler(new KeywordRetriever(),Log()).Build(turn,new(),"A");Assert.Contains("Engineer",prompt);Assert.Contains("THEM",prompt);Assert.Contains("5000",prompt);Assert.Contains("Older discussion",prompt);}
+ [Fact] public async Task BoxesAreConcurrentAndLateResponsesAreRejected()
+ {
+  var http=new HttpClient();var registry=new ProviderRegistry(http);registry.Models.Add(new("test","test","OpenRouter",Capability.Text,false,[]));var provider=new ControlledProvider();var log=Log();using var orchestrator=new SuggestionOrchestrator(registry,new(new KeywordRetriever(),log),provider,log);var results=new List<SuggestionResult>();orchestrator.Result+=r=>{lock(results)results.Add(r);};
+  var turn=new TurnCommit(Guid.NewGuid(),new(1,[]),new(2,[]),new(),new("","","",[],[],[],[],[],[],[],""),DateTimeOffset.UtcNow,DateTimeOffset.UtcNow,"");
+  var task=orchestrator.CommitAsync(turn,[new(){Model="test"},new(){Model="test"},new()]);Assert.Equal(2,provider.Calls.Count);
+  orchestrator.ChangeConfiguration(0);provider.Calls[0].SetResult("stale");provider.Calls[1].SetResult("valid B");await task;
+  Assert.DoesNotContain(results,x=>x.Text=="stale");Assert.Contains(results,x=>x.Text=="valid B"&&x.Id.Box=="B");
+ }
+ [Fact] public void OperationalLogsExcludeContentByDefault(){var dir=Path.Combine(Path.GetTempPath(),Guid.NewGuid().ToString());var log=new Diagnostics(dir);log.Event("test","started");log.Content("prompt","private secret content");var text=File.ReadAllText(Directory.GetFiles(dir).Single());Assert.DoesNotContain("private secret content",text);}
+ private sealed class ControlledProvider : ISuggestionProvider
+ {public List<TaskCompletionSource<string>> Calls {get;}=[];public Task<string> GenerateAsync(string p,BoxConfig c,ModelEntry m,CancellationToken ct){var call=new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);Calls.Add(call);return call.Task;}}
+}

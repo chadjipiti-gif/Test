@@ -1,2 +1,2 @@
-Phases 1–7 implemented: acoustic pause, semantic heuristics, fallback gate and unique frozen turn snapshots.
-Current: concurrent model requests.
+Phases 1–8 implemented: independent concurrent OpenRouter paths, stable buffered cards, model cancellation and request versions. Core test execution recorded in final report.
+Current: Realtime integration.
