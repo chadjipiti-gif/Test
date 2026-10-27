@@ -1,2 +1,2 @@
-Phases 1–3 implemented. Settings/registry/DPAPI code cross-build passed; DPAPI runtime needs Windows.
-Current: audio/transcription. Live keys unavailable.
+Phases 1–4 implemented; capture code builds. Microphone and endpoint loopback need Windows hardware validation. No process-loopback or AEC implementation.
+Current: transcription.
