@@ -1,0 +1,2 @@
+Phase 1: shell and Windows workflow created; Linux cross-build passed. Windows CI not yet run.
+Current phase: 2.

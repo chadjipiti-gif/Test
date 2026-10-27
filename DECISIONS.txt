@@ -1,0 +1,2 @@
+Use cross-platform .NET 8 core for deterministic tests; WPF/NAudio/DPAPI isolated in Windows host.
+No credentials or meeting content in repository. Endpoint loopback is the MVP fallback.

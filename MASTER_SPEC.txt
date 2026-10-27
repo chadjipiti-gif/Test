@@ -1,0 +1,951 @@
+Build the following application in the existing empty GitHub repository.
+
+Work autonomously. Do not stop after creating scaffolding or planning files. Continue phase by phase until the application builds successfully in Windows CI or you encounter a genuine blocker that cannot be resolved without user input, credentials, or physical Windows audio hardware.
+
+Do not ask routine implementation questions. Choose conservative, maintainable defaults consistent with this specification.
+
+Do not invent API formats, model IDs, or provider capabilities. Check current official provider documentation when implementing integrations.
+
+Do not put API keys, secrets, meeting content, or user-specific data in the repository.
+
+GOAL
+
+Build a single-user Windows desktop application called Private Conversation Copilot.
+
+It listens to live meetings/calls as an attendee, maintains conversational context, and privately displays three independent text suggestions.
+
+No meeting bot.
+No organizer permissions.
+No user accounts.
+No cloud database.
+No permanent audio recording by default.
+No multi-user features.
+No installer is required initially.
+
+The first usable version should allow the user to:
+1. Launch the Windows app.
+2. Enter API keys in Settings.
+3. Test those API connections.
+4. Choose an STT provider/model.
+5. Choose models for suggestion paths A, B, and C.
+6. Select microphone and meeting-output audio.
+7. Start a session.
+8. See a live ME/THEM transcript.
+9. Type or paste prepared context and intra-call notes.
+10. Automatically detect when THEM finishes a turn.
+11. Send the current conversation plus relevant context to the active models.
+12. Display three stable suggestion cards.
+13. Press Help Me Now to force suggestions immediately.
+14. Stop the session cleanly.
+15. Review useful local diagnostic information if something fails.
+TECH STACK
+
+Use C# with .NET 8 and WPF unless there is a strong technical reason not to.
+
+Use dependency injection and clear interfaces between subsystems.
+
+Use NAudio where appropriate for Windows audio capture. Use native Windows APIs/PInvoke where NAudio does not provide required functionality.
+
+Use async/await, CancellationToken, and explicit request/version IDs for concurrent work.
+
+Use DPAPI/ProtectedData CurrentUser for local API-key encryption.
+
+Use simple local files under the user application-data directory for non-secret settings and session configuration. Do not introduce a database unless it becomes necessary.
+
+Create a GitHub Actions workflow using windows-latest that:
+- restores dependencies
+- builds the solution
+- runs automated tests
+- publishes a self-contained win-x64 build
+- uploads the published application as a GitHub Actions artifact
+This allows the application to be built even if the Codex environment itself is not Windows.
+
+REPOSITORY STRUCTURE
+
+Create and maintain:
+
+MASTER_SPEC.txt
+BUILD_PLAN.txt
+PROGRESS.txt
+DECISIONS.txt
+
+MASTER_SPEC.txt should contain the authoritative implementation specification derived from this prompt.
+
+BUILD_PLAN.txt should contain the phases below and their acceptance criteria.
+
+PROGRESS.txt should identify:
+- completed phases
+- current phase
+- tests passing/failing
+- unresolved problems
+- manual hardware/API tests still required
+DECISIONS.txt should contain only meaningful implementation decisions that future work needs to know.
+
+Commit after every working phase with a descriptive commit message.
+
+Do not commit generated binaries, API keys, local user data, or sensitive logs.
+
+ARCHITECTURE
+
+Keep these modules independent:
+
+UI
+Audio Capture
+Transcription
+Transcript State
+Turn Detection
+Meeting State
+Prepared Context / Retrieval
+Prompt Assembly
+Suggestion Orchestration
+Provider Registry
+Box A Provider
+Box B Provider
+Box C Realtime Provider
+Secure Settings
+Diagnostics / Logging
+Latency Metrics
+Test Harness
+
+One module failing should not unnecessarily stop unrelated modules.
+
+MAIN WINDOW
+
+Optimize the layout for a roughly square monitor.
+
+Use three columns.
+
+LEFT COLUMN
+
+Full-height Context / Notes panel.
+
+This is one working area, not separate Prepared Context and Live Notes boxes.
+
+It contains:
+- prepared Q&A
+- facts
+- stories
+- background information
+- pasted notes
+- notes typed during the current meeting
+It must be editable and scrollable.
+
+Autosave locally.
+
+New text added during the meeting must become available to subsequent model requests.
+
+At the top, provide access to a small four-field Summary:
+
+Who I am
+Who they are
+What we are discussing
+My goal
+
+The Summary must be editable but collapsible/hidden so it consumes almost no permanent screen space.
+
+Do not create a separate Live Notes panel.
+
+MIDDLE COLUMN
+
+This is the primary visual area.
+
+Display three vertically stacked suggestion cards.
+
+Do not use large A/B/C headers.
+
+Normal card appearance should contain only:
+- suggestion text
+- small Copy control
+- small Dismiss control
+Do not permanently display prompts, grounding explanations, model names, token counts, or debug text inside the cards.
+
+Such metadata may be available in debug mode or a tooltip/details view.
+
+Top card = fast/grounded path.
+Middle card = reasoning/risk/angle path.
+Bottom card = audio-native Realtime path.
+
+Cards must remain visually stable once committed.
+
+Never stream changing model tokens directly into the visible committed card.
+
+A card is replaced only when a later turn is committed.
+
+Dismiss hides the current card only. The box remains active and should generate again on the next committed turn.
+
+Provide clear but unobtrusive idle, working, disabled, and error states.
+
+RIGHT COLUMN
+
+Split vertically.
+
+Upper section, approximately one third:
+
+Compact session controls only.
+
+Include:
+- Start/Stop session
+- Clear / Infer mode
+- active audio source status
+- selected microphone
+- transcript-depth gauge
+- Help Me Now
+- simple on/off controls for A/B/C if space permits
+Do not put advanced model configuration here.
+
+Only show an AEC control if a real AEC implementation is available.
+
+For the first MVP, do not build a custom echo canceller merely to satisfy the UI. The user may select an externally processed microphone such as Krisp.
+
+Lower section:
+
+Recent live transcript.
+
+Show only recent conversation by default.
+
+Clearly distinguish:
+
+ME
+THEM
+
+Partial transcript text should look different from finalized transcript text.
+
+The transcript panel must be collapsible.
+
+ROLLING MEETING STATE
+
+Maintain this internally even though it is not permanently displayed on the main screen.
+
+Track:
+
+Current topic
+Their apparent objective
+My objective
+Open questions
+Decisions
+Commitments
+Deadlines
+Objections
+Important constraints
+Important facts learned during the current call
+
+Maintain:
+1. Recent verbatim ME/THEM transcript.
+2. Older rolling discussion summary.
+Updates to the rolling summary must happen asynchronously and must not delay live suggestion generation.
+
+TRANSCRIPT DEPTH
+
+The current meeting transcript is part of the actual API input to the models.
+
+It is not merely stored locally.
+
+Provide a transcript-depth control.
+
+User-facing levels may be:
+
+Low
+Medium
+High
+Max/Auto
+
+Internally implement this as a configurable token budget.
+
+Always preserve the newest turns first.
+
+Trim oldest verbatim turns first when the budget is exceeded.
+
+Older material should be represented by the rolling discussion summary.
+
+Allow per-box transcript-depth defaults in Settings.
+
+STATIC SUMMARY
+
+Every model request should receive the four static meeting facts unless the corresponding fields are empty:
+
+Who I am
+Who they are
+Discussion
+Goal
+
+Keep this separate from the changing meeting state.
+
+PREPARED CONTEXT AND RETRIEVAL
+
+Do not send the entire context box blindly on every request.
+
+Split the context into usable chunks.
+
+For the MVP, use a lightweight local retrieval approach that does not require another paid embedding API.
+
+Keyword/BM25/TF-IDF-style relevance is acceptable.
+
+Retrieval should use:
+- the current THEM turn
+- recent transcript
+- current topic
+Retrieve only the most relevant chunks within a configurable context budget.
+
+Keep transcript depth and retrieved-context depth as separate concepts.
+
+Retrieved-context depth can live primarily in Settings rather than occupying main-screen space.
+
+EVIDENCE METADATA
+
+Internally represent retrieved context items with:
+
+text
+source
+freshness/date if known
+confidence if known
+safeToRepeat flag
+prepared vs current-call origin
+
+User-entered prepared text and manual current-call notes should retain their origin.
+
+Do not fabricate metadata that is not known.
+
+AUDIO CAPTURE
+
+Use an abstraction such as IAudioCaptureService.
+
+Clear mode is preferred.
+
+Clear mode:
+
+THEM:
+Prefer meeting-process/app loopback where practical.
+
+Fallback:
+WASAPI endpoint loopback.
+
+ME:
+Selected microphone.
+
+Capture the two streams independently.
+
+Do not change the Windows default input/output device and do not modify Teams/Zoom/Meet device settings.
+
+If process-specific loopback cannot be made reliable during the first build, endpoint loopback must still provide a working fallback. Do not let process-loopback work block the entire MVP.
+
+Support runtime device enumeration and selection.
+
+Handle device loss/change without crashing.
+
+Infer mode:
+
+Support a single mixed microphone/audio source with diarization where the STT provider supports it.
+
+Allow manual ME/THEM speaker correction/mapping.
+
+Do not save live audio to disk unless explicit audio retention is later enabled.
+
+TRANSCRIPTION
+
+Implement the transcription layer through an interface.
+
+First required STT implementation:
+
+Deepgram streaming transcription.
+
+Use the current supported streaming API and current official documentation.
+
+Nova-3 may be used if it remains a currently supported appropriate model.
+
+Support, where available:
+
+interim/partial transcripts
+final transcripts
+timestamps
+confidence
+speaker labels
+diarization
+endpoint-related metadata
+smart formatting
+keyterms/prompting
+
+Do not assume every provider supports every option.
+
+Provider capabilities must control which settings are enabled.
+
+Add AssemblyAI only after the core application is working. It must not block the first usable build.
+
+TRANSCRIPT STATE
+
+Maintain a canonical transcript owned by the application.
+
+Each transcript segment should at minimum contain:
+
+ID
+speaker role: ME / THEM / UNKNOWN
+text
+partial/final state
+start time
+end time
+confidence if available
+STT speaker identifier if available
+
+Partials may change.
+
+Only finalized/corrected transcript should become permanent canonical history.
+
+Manual speaker corrections must update canonical state so future prompts use the corrected role.
+
+TURN DETECTION
+
+Turn detection must be a separate service.
+
+A transcription final is not automatically equivalent to conversational end-of-turn.
+
+Use three signals:
+1. Acoustic gate
+   Pause / speech-energy indication from THEM.
+2. Semantic gate
+   Does the current utterance appear conversationally complete?
+The first implementation may use reliable local heuristics based on transcript structure, punctuation, question form, incomplete phrases, etc. Keep this behind an interface so a stronger semantic detector can replace it later.
+3. Fallback timeout
+   Do not wait indefinitely.
+Expose reasonable sensitivity/default settings.
+
+When the detector commits an end-of-turn for THEM:
+- create a unique turn ID
+- freeze the transcript version used for that turn
+- finalize suggestion work for all enabled boxes
+If THEM resumes quickly after a commit, record that as a probable false endpoint for diagnostics.
+
+HELP ME NOW
+
+Help Me Now must immediately create a turn/suggestion event using the newest available transcript and context.
+
+It should trigger all currently active suggestion boxes concurrently.
+
+It must not wait for normal end-of-turn detection.
+
+PROMPT ASSEMBLY
+
+For text models, construct requests in this logical order:
+
+System behavior instructions
+
+Static Summary
+
+Current structured Meeting State
+
+Rolling discussion summary
+
+Recent verbatim ME/THEM transcript within the selected budget
+
+Relevant retrieved Context
+
+Evidence metadata where useful
+
+Current THEM turn
+
+Box-specific task instruction
+
+Keep prompts concise.
+
+Do not repeatedly include irrelevant context.
+
+BOX A
+
+Independent text inference path.
+
+Purpose:
+Fast, practical, grounded response suggestion.
+
+Use an OpenRouter text model.
+
+It should favor:
+- direct answer
+- useful next question
+- prepared context
+- factual grounding
+- short speakable language
+Do not write essays.
+
+BOX B
+
+Independent text inference path.
+
+Also use OpenRouter initially.
+
+It may use a different model and larger reasoning/context budget.
+
+Purpose:
+Identify:
+- stronger reasoning
+- risk
+- objection handling
+- overlooked angle
+- caveat
+- alternative response
+It should still produce short speakable output, not analysis paragraphs.
+
+A and B must be concurrent and independent.
+
+They must never wait on one another.
+
+The same model/route may be selected for both.
+
+BOX C
+
+Independent audio-native path.
+
+Use the current supported OpenAI Realtime API and a current supported Realtime model verified from official documentation.
+
+Box C maintains its own active Realtime session, but the application remains the source of truth for meeting history.
+
+In Clear mode:
+
+Prefer feeding THEM audio directly to the Realtime session so it can use audio/prosody information.
+
+Inject finalized ME transcript/history and shared meeting state as text/context so Box C remains aware of both sides of the conversation.
+
+Also provide:
+- Static Summary
+- relevant Meeting State
+- relevant retrieved context when appropriate
+Do not rely exclusively on OpenAI Realtime's internal conversation history.
+
+If the Realtime session reconnects, reconstruct important context from application-owned state.
+
+In Infer mode, use the best practical mixed-audio approach while retaining application-owned speaker/transcript state.
+
+If Box C cannot be completed without blocking the working A/B application, keep C cleanly disableable and continue development. Do not fake C output.
+
+SUGGESTION ORCHESTRATION
+
+All boxes operate independently.
+
+Use request IDs containing at least:
+
+box ID
+turn ID
+transcript version
+context version
+model configuration version
+
+Use CancellationToken for active requests.
+
+If the user changes a model during a meeting:
+
+Cancel that box's active request.
+
+Increment its configuration version.
+
+Ignore any late response from the previous configuration.
+
+Do not interrupt other boxes.
+
+SPECULATIVE WORK
+
+Partials may trigger background work before THEM finishes:
+
+retrieval
+intent estimation
+prompt preparation
+optional speculative generation
+
+Never expose speculative text directly.
+
+At turn commit, only use speculative output if its transcript/context versions remain compatible with the committed turn.
+
+Otherwise discard it and issue/finalize a fresh request.
+
+SETTINGS
+
+Create a separate Settings view opened with a small gear control.
+
+Do not clutter the main meeting UI with advanced settings.
+
+API KEYS
+
+Initially implement secure key support for:
+
+Deepgram
+OpenRouter
+OpenAI
+
+Add more providers only after core functionality works.
+
+DeepSeek Direct and AssemblyAI are useful later adapters but are not allowed to block the MVP.
+
+Each implemented provider has:
+
+API-key field
+Save
+Test Connection
+status
+
+Statuses:
+
+Not configured
+Connected
+Connection error
+
+Store keys encrypted using Windows user-level DPAPI.
+
+Never display the complete stored key after saving.
+
+Never log keys.
+
+Never commit keys.
+
+PROVIDER REGISTRY
+
+Create one central provider/model registry.
+
+The registry records:
+
+provider
+route
+model ID
+display name
+capability: STT / text inference / realtime audio
+streaming support
+required credential
+supported parameters
+availability
+enabled state
+
+Dropdowns are generated from this registry.
+
+None must always be available for A/B/C.
+
+Do not provide arbitrary endpoint/model text boxes in the normal UI.
+
+Only expose models/routes supported by implemented adapters.
+
+For OpenRouter, verify current model availability when practical and disable unavailable configured entries.
+
+Ensure at least a useful fast model and a stronger reasoning model can be selected when currently available.
+
+If a current DeepSeek model is available through OpenRouter and works with the adapter, include it as a supported OpenRouter route.
+
+Do not guess model IDs.
+
+MODEL SETTINGS
+
+Each suggestion box has its own settings.
+
+Where the chosen model actually supports them, allow:
+
+temperature
+top_p
+max output tokens
+reasoning effort
+transcript depth
+retrieved-context depth
+provider-specific options
+
+The registry determines which controls are shown.
+
+Do not send unsupported parameters.
+
+Provide sensible defaults oriented toward short, stable, low-variance meeting suggestions.
+
+STT SETTINGS
+
+Provide:
+
+STT provider/model
+partial/interim results
+diarization if supported
+smart formatting if supported
+endpoint-related controls if supported
+keyterms/prompting if supported
+provider-specific settings
+
+Disable or hide unsupported settings.
+
+LOGGING
+
+Default logging must be privacy-conscious.
+
+Always log non-sensitive operational information such as:
+
+timestamps
+module
+state changes
+latency
+API status/error codes
+device changes
+request IDs
+turn IDs
+
+Do not log transcript text, prompts, retrieved context, or raw model output by default.
+
+Provide a Debug Content Logging option.
+
+Only when explicitly enabled may logs contain:
+
+partial/final transcripts
+exact prompts
+raw responses
+retrieved context
+
+API keys must never be logged under any setting.
+
+Store logs locally.
+
+Provide an easy way to open the log folder.
+
+LATENCY
+
+Instrument the pipeline.
+
+Primary metric:
+
+Time from last audible phoneme of a correctly detected THEM turn to complete paint of a stable usable suggestion.
+
+Capture timestamps for:
+
+audio capture
+STT partial
+STT final
+turn commit
+retrieval start/end
+model request start
+first response data
+stable card completion
+UI paint
+
+Track independently for A, B, and C.
+
+Calculate at least:
+
+P50
+P95
+P99
+
+Also track:
+
+probable false endpoints
+cancelled/stale requests
+provider errors
+
+Do not optimize only for time-to-first-token.
+
+The visible metric that matters is stable usable card completion.
+
+WINDOW PRIVACY
+
+After core functionality works, add Windows window-capture exclusion using the appropriate Windows API such as WDA_EXCLUDEFROMCAPTURE where supported.
+
+Failure to enable capture exclusion must not crash the application.
+
+Do not describe this as a security guarantee.
+
+TEST HARNESS
+
+Create a local test mode that can feed an existing WAV file into the downstream pipeline.
+
+The test harness should make it possible to test:
+
+STT
+transcript handling
+turn detection
+retrieval
+prompt assembly
+A/B orchestration
+latency logging
+
+without joining a live meeting.
+
+Use mocks for automated unit tests where credentials or live providers are unavailable.
+
+Do not ship fake provider responses as if they were real application output.
+
+ERROR HANDLING
+
+The app must degrade gracefully.
+
+If one suggestion provider fails:
+show an unobtrusive error in that card and keep the others working.
+
+If STT disconnects:
+attempt controlled reconnect and clearly indicate transcript failure.
+
+If Clear mode loses one audio stream:
+show a visible warning.
+
+Do not silently misrepresent the session as healthy.
+
+If process loopback fails:
+fall back to endpoint loopback where possible.
+
+If retrieval fails:
+continue using transcript + meeting state.
+
+If Box C fails:
+A and B continue.
+
+PHASE ORDER
+
+Phase 1
+Create solution, architecture, planning files, Windows CI workflow, tests project, and basic WPF shell.
+
+Acceptance:
+Windows CI builds.
+Main window opens in code structure.
+Settings navigation exists.
+
+Commit.
+
+Phase 2
+Build the exact three-column main UI and Settings UI.
+
+Acceptance:
+Left context panel is full height.
+Three stacked center cards exist.
+Right controls + transcript layout exists.
+Summary is collapsible.
+Layout behaves reasonably on a square window.
+
+Commit.
+
+Phase 3
+Secure settings and provider registry.
+
+Implement Deepgram, OpenRouter, and OpenAI credential storage and connection tests.
+
+Acceptance:
+Keys save encrypted.
+Connection state is visible.
+Keys are not logged.
+Model/provider dropdowns come from registry.
+
+Commit.
+
+Phase 4
+Audio subsystem.
+
+Implement microphone capture and WASAPI endpoint loopback first.
+
+Attempt/implement process-specific loopback behind the same abstraction where practical.
+
+Acceptance:
+Devices enumerate.
+ME and THEM streams can run concurrently.
+Starting/stopping repeatedly does not crash.
+Endpoint loopback provides a functional fallback.
+No audio files are written.
+
+Commit.
+
+Phase 5
+Deepgram streaming STT and canonical transcript.
+
+Acceptance:
+Live partials appear.
+Finals appear.
+ME/THEM are deterministic in Clear mode.
+Transcript history is maintained.
+Transcript panel shows recent lines.
+Connection failure is visible and recoverable.
+
+Commit.
+
+Phase 6
+Context store, Summary, Meeting State, transcript budget, retrieval, evidence metadata, and prompt assembly.
+
+Acceptance:
+Left context is editable and persists.
+New intra-call notes become available immediately.
+Summary fields work.
+Recent transcript and rolling state are assembled correctly.
+Relevant context chunks are selected without sending the entire context box.
+
+Commit.
+
+Phase 7
+Turn detector and Help Me Now.
+
+Acceptance:
+Acoustic + semantic heuristic + timeout service exists.
+THEM turn commits generate unique turn IDs.
+Help Me Now forces a commit.
+Probable false endpoints are measurable.
+
+Commit.
+
+Phase 8
+Box A and Box B using OpenRouter.
+
+Acceptance:
+A and B start concurrently.
+Both can use the same or different models.
+Neither waits for the other.
+Cards update only on committed turns.
+Cards stay stable.
+Copy and Dismiss work.
+Changing one model cancels only that box.
+Stale/late responses cannot overwrite newer cards.
+
+At this point the application must already be usable without Box C.
+
+Commit.
+
+Phase 9
+OpenAI Realtime Box C.
+
+Acceptance:
+Realtime session connects with a valid key.
+Audio-native path produces text suggestions.
+App-owned transcript/state remains canonical.
+A/B continue if C disconnects.
+C can be disabled with None.
+
+Commit.
+
+Phase 10
+Diagnostics, latency metrics, WAV test harness, window capture exclusion, resilience cleanup.
+
+Acceptance:
+Useful local operational logs exist.
+Sensitive content logging is opt-in.
+Latency stages are recorded.
+WAV test mode works.
+Window capture exclusion is attempted safely.
+Windows CI remains green.
+
+Commit.
+
+Phase 11
+Publish usable Windows build.
+
+Create a self-contained win-x64 publish output in GitHub Actions and upload it as an artifact.
+
+Create a short RUN_ME.txt containing only:
+1. Where to get the GitHub Actions Windows artifact.
+2. How to launch the app.
+3. Where to enter API keys.
+4. Minimum keys needed for:
+   - transcription
+   - A/B
+   - C
+5. How to select mic and meeting output.
+6. How to start a session.
+7. Known hardware/API limitations that still require manual verification.
+FINAL BEHAVIOR
+
+Do not stop merely because live API keys are unavailable in the development environment.
+
+Build and test everything possible without secrets.
+
+Use mocks only in automated tests.
+
+Leave real integrations ready for the user to enter their own credentials at runtime.
+
+Continue automatically through the phases.
+
+Only stop early if:
+- an architectural requirement is technically impossible,
+- a required external API no longer provides the capability specified,
+- repository access prevents continuing,
+- Windows CI cannot be made to build after reasonable attempts,
+- or progress genuinely requires user credentials or physical hardware interaction.
+If one optional feature is blocked, document it in PROGRESS.txt and continue building the rest of the application.
+
+The priority is a working application, not theoretical completeness.

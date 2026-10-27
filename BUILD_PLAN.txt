@@ -1,0 +1,147 @@
+PHASE ORDER
+
+Phase 1
+Create solution, architecture, planning files, Windows CI workflow, tests project, and basic WPF shell.
+
+Acceptance:
+Windows CI builds.
+Main window opens in code structure.
+Settings navigation exists.
+
+Commit.
+
+Phase 2
+Build the exact three-column main UI and Settings UI.
+
+Acceptance:
+Left context panel is full height.
+Three stacked center cards exist.
+Right controls + transcript layout exists.
+Summary is collapsible.
+Layout behaves reasonably on a square window.
+
+Commit.
+
+Phase 3
+Secure settings and provider registry.
+
+Implement Deepgram, OpenRouter, and OpenAI credential storage and connection tests.
+
+Acceptance:
+Keys save encrypted.
+Connection state is visible.
+Keys are not logged.
+Model/provider dropdowns come from registry.
+
+Commit.
+
+Phase 4
+Audio subsystem.
+
+Implement microphone capture and WASAPI endpoint loopback first.
+
+Attempt/implement process-specific loopback behind the same abstraction where practical.
+
+Acceptance:
+Devices enumerate.
+ME and THEM streams can run concurrently.
+Starting/stopping repeatedly does not crash.
+Endpoint loopback provides a functional fallback.
+No audio files are written.
+
+Commit.
+
+Phase 5
+Deepgram streaming STT and canonical transcript.
+
+Acceptance:
+Live partials appear.
+Finals appear.
+ME/THEM are deterministic in Clear mode.
+Transcript history is maintained.
+Transcript panel shows recent lines.
+Connection failure is visible and recoverable.
+
+Commit.
+
+Phase 6
+Context store, Summary, Meeting State, transcript budget, retrieval, evidence metadata, and prompt assembly.
+
+Acceptance:
+Left context is editable and persists.
+New intra-call notes become available immediately.
+Summary fields work.
+Recent transcript and rolling state are assembled correctly.
+Relevant context chunks are selected without sending the entire context box.
+
+Commit.
+
+Phase 7
+Turn detector and Help Me Now.
+
+Acceptance:
+Acoustic + semantic heuristic + timeout service exists.
+THEM turn commits generate unique turn IDs.
+Help Me Now forces a commit.
+Probable false endpoints are measurable.
+
+Commit.
+
+Phase 8
+Box A and Box B using OpenRouter.
+
+Acceptance:
+A and B start concurrently.
+Both can use the same or different models.
+Neither waits for the other.
+Cards update only on committed turns.
+Cards stay stable.
+Copy and Dismiss work.
+Changing one model cancels only that box.
+Stale/late responses cannot overwrite newer cards.
+
+At this point the application must already be usable without Box C.
+
+Commit.
+
+Phase 9
+OpenAI Realtime Box C.
+
+Acceptance:
+Realtime session connects with a valid key.
+Audio-native path produces text suggestions.
+App-owned transcript/state remains canonical.
+A/B continue if C disconnects.
+C can be disabled with None.
+
+Commit.
+
+Phase 10
+Diagnostics, latency metrics, WAV test harness, window capture exclusion, resilience cleanup.
+
+Acceptance:
+Useful local operational logs exist.
+Sensitive content logging is opt-in.
+Latency stages are recorded.
+WAV test mode works.
+Window capture exclusion is attempted safely.
+Windows CI remains green.
+
+Commit.
+
+Phase 11
+Publish usable Windows build.
+
+Create a self-contained win-x64 publish output in GitHub Actions and upload it as an artifact.
+
+Create a short RUN_ME.txt containing only:
+1. Where to get the GitHub Actions Windows artifact.
+2. How to launch the app.
+3. Where to enter API keys.
+4. Minimum keys needed for:
+   - transcription
+   - A/B
+   - C
+5. How to select mic and meeting output.
+6. How to start a session.
+7. Known hardware/API limitations that still require manual verification.
