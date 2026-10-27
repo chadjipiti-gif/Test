@@ -1,2 +1,12 @@
 Use cross-platform .NET 8 core for deterministic tests; WPF/NAudio/DPAPI isolated in Windows host.
 No credentials or meeting content in repository. Endpoint loopback is the MVP fallback.
+Use the existing isolated checkout. No worktree is necessary.
+Keep .NET core platform-neutral. Windows-only WPF, WASAPI, DPAPI and capture exclusion live in the host. Constructor DI supplies host services.
+Capture fallback is explicitly endpoint loopback, which includes all applications on the selected endpoint. Process-specific activation and custom AEC are deferred; the UI does not claim either capability.
+Provider contracts were checked against official maintained GitHub sources because some documentation domains were blocked. OpenRouter routes/parameters are discovered at runtime; no guessed static IDs are shipped.
+Use GA OpenAI Realtime gpt-realtime with text-only output and 24kHz mono PCM input. Keep response generation manual and reconstruct canonical context every request. Retain only two committed audio items and at most about 25 seconds of uncommitted audio. Transport failures in C leave A/B active.
+Use sparse local keyword/IDF relevance, conservative UTF-8-byte token estimates, and extractive meeting-state candidates. Objectives/facts are never invented. Evidence confidence/repeatability remain nullable when unknown. Origins are tracked per paragraph; editing an existing paragraph during a call marks the edited paragraph as current-call notes.
+Immutable turn snapshots and per-box configuration/request versions gate both backend completion and queued UI application. Buffers produce stable whole-card updates, never streamed token painting.
+Capture latency uses RMS last-activity and the next WPF rendering callback as proxies. P50/P95/P99 are not represented as physical-monitor or phoneme measurements.
+DPAPI CurrentUser secrets and application-data files are local. Operational logs exclude content by default; debug content is opt-in and configured keys are redacted. Diagnostic write failure must not stop audio/model work.
+Windows CI includes independent core and Windows-only DPAPI, WPF construction and surround-downmix tests. Cross-compilation is evidence of buildability, not Windows hardware execution.

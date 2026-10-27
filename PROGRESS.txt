@@ -1,2 +1,40 @@
-Phases 1–9 implemented and cross-built. Realtime adapter is real (GA schema, native PCM), cleanly disabled with None; no live API verification without keys.
-Current: diagnostics, resilience, Windows packaging and documentation.
+Private Conversation Copilot — implementation and validation status
+
+Implemented phases
+1. .NET 8 solution, cross-platform core, WPF host, DI, test projects, Windows Actions workflow.
+2. Three-column square-oriented layout, full-height editable context, collapsible Summary/transcript, three stable cards, Settings navigation.
+3. DPAPI CurrentUser encrypted key storage, Save/Test/status, provider/model registry, live OpenRouter catalog and capability-driven controls.
+4. Independent selected microphone and WASAPI endpoint loopback, runtime enumeration/refresh, in-memory PCM normalization, device-loss warnings and cleanup. Process-specific loopback deferred (endpoint fallback implemented).
+5. Deepgram Nova-3 streaming: interim/final, times/confidence, Clear roles, Infer diarization/manual future speaker mapping, bounded reconnect and graceful close.
+6. Notes/Summary autosave, versioned paragraph evidence origins, local relevance retrieval, separate token budgets, async extractive state/older summary and prompt assembly.
+7. RMS/semantic/fallback turn detector, unique frozen commit events, Help Me Now, probable false endpoint diagnostics.
+8. Concurrent independent OpenRouter A/B, whole-response stable cards, Copy/Dismiss, per-box configuration cancellation and stale backend/UI result rejection.
+9. Independent GA OpenAI Realtime adapter with live PCM, text output, app-owned canonical context injection, disableable None and isolated errors.
+10. Local operational/debug logs, secret redaction, disk-failure isolation, staged latency/P50/P95/P99 render proxies, WAV downstream harness, window capture exclusion and regression tests.
+11. Self-contained win-x64 publish workflow/artifact and RUN_ME.txt. Local self-contained publish succeeds. Publication through GitHub Actions is NOT yet verified.
+
+Current phase
+Windows CI execution confirmation and manual hardware/API validation. Implementation phases are committed; their hardware/API acceptance criteria remain pending where listed below.
+
+Executed validation
+- .NET SDK 8.0.427 installed outside repository.
+- Solution restore/build (including WPF and Windows test targets): PASS on Linux cross-targeting; 0 warnings/errors in latest completed run.
+- Copilot.Tests: 20 passed, 0 failed, 0 skipped. Covers transcript final/partial/correction/mapping, retrieval/origins, budget suffixes, prompts, turn gates/reset, A/B concurrency/failure isolation/staleness, catalog filtering, HTTP request parameters, Deepgram result parsing, diagnostics/redaction/percentiles.
+- Self-contained win-x64 publish: PASS, executable, runtime and launch docs generated outside repository. Windows execution is not inferred.
+- Git push to origin/main: PASS for implementation commits; final push status reported in chat.
+- Provider keys: Deepgram, OpenRouter and OpenAI environment variables are not set. No secret values were read or printed.
+
+Unrun/blocked
+- Windows-only tests (3): DPAPI round-trip, WPF/Settings STA construction and surround downmix compile; cannot execute on Linux. Configured in Windows CI.
+- GitHub Actions result/artifact inspection: blocked by denied api.github.com access and unusable GitHub CLI credential. HTTPS Git proxy supports push, not Actions API. Private Actions web route returns 404 without browser authentication. No CI-green claim is made.
+- Live provider requests: not run without keys. Runtime key entry and real adapters are implemented; no fake responses are shipped in app mode.
+- Physical Windows mic/output capture, repeated start/stop, device removal/permissions, echo and virtual mixed Infer source need manual tests.
+- WAV harness compiles and shares the real pipeline; end-to-end STT/suggestions need a user-supplied WAV and keys. No meeting/audio fixtures were committed.
+- Real Realtime model/account entitlement and reconnect reconstruction, latency/sensitivity tuning and square-monitor usability need manual validation.
+- Capture exclusion is best effort and not a security guarantee.
+
+Known limitations
+Endpoint loopback includes other application audio. No process loopback, custom AEC, AssemblyAI or DeepSeek Direct adapter. Infer needs an externally mixed source; heuristic turn/state extraction is conservative, not a full dialogue understanding model. Sparse English-word retrieval may be weak for languages without word separators. Token estimates are deliberately conservative. UI render callback and RMS energy are measurement proxies. Restart session after C transport failure or exhausted STT retries. Local notes/Summary are plaintext application-data files; audio and transcript are not persisted unless debug content logging is explicitly enabled (debug logs contain text, not audio).
+
+Next external action
+Check the final Windows build at https://github.com/chadjipiti-gif/Test/actions, download its successful artifact and run RUN_ME.txt steps. To let this agent inspect/fix Windows CI failures directly, provide supported authenticated GitHub Actions access (not an API key pasted into chat), or share the failing job log. Enter provider keys only in the Windows app Settings.

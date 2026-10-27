@@ -5,3 +5,10 @@ TestResults/
 publish/
 *.user
 *.log
+*.key
+*.pfx
+*.p12
+.env
+.env.*
+*.wav
+*.pcm

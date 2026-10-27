@@ -13,6 +13,7 @@ jobs:
       - run: dotnet restore PrivateConversationCopilot.sln
       - run: dotnet build PrivateConversationCopilot.sln -c Release --no-restore
       - run: dotnet test tests/Copilot.Tests -c Release --no-build --logger trx
+      - run: dotnet test tests/Copilot.Windows.Tests -c Release --no-build --logger trx
       - run: dotnet publish src/Copilot.App -c Release -r win-x64 --self-contained true -o publish
       - uses: actions/upload-artifact@v4
         with:

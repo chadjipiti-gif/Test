@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -12,6 +12,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{1FE8741D-39F6-404D-8794-094C58DE990E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Copilot.Tests", "tests\Copilot.Tests\Copilot.Tests.csproj", "{4AD978A0-5F22-4D29-BA25-A9C8C1C9F9A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Copilot.Windows.Tests", "tests\Copilot.Windows.Tests\Copilot.Windows.Tests.csproj", "{4FFE44F1-C2DF-40F5-8183-31D5F05F287B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,10 +36,15 @@ Global
 		{4AD978A0-5F22-4D29-BA25-A9C8C1C9F9A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4AD978A0-5F22-4D29-BA25-A9C8C1C9F9A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4AD978A0-5F22-4D29-BA25-A9C8C1C9F9A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FFE44F1-C2DF-40F5-8183-31D5F05F287B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FFE44F1-C2DF-40F5-8183-31D5F05F287B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FFE44F1-C2DF-40F5-8183-31D5F05F287B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FFE44F1-C2DF-40F5-8183-31D5F05F287B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0428961D-F337-44AA-B150-0E452432C7C5} = {907F281C-F54C-488F-AA7E-5BA341E71EA8}
 		{50ADDFC0-A1A3-4321-87A9-696BC05DDC80} = {907F281C-F54C-488F-AA7E-5BA341E71EA8}
 		{4AD978A0-5F22-4D29-BA25-A9C8C1C9F9A0} = {1FE8741D-39F6-404D-8794-094C58DE990E}
+		{4FFE44F1-C2DF-40F5-8183-31D5F05F287B} = {1FE8741D-39F6-404D-8794-094C58DE990E}
 	EndGlobalSection
 EndGlobal
