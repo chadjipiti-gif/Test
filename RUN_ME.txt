@@ -1,0 +1,7 @@
+1. Open https://github.com/chadjipiti-gif/Test/actions and select a successful Windows build. Download PrivateConversationCopilot-win-x64 from Artifacts.
+2. Extract the entire ZIP into a folder on Windows 10/11 x64. Launch PrivateConversationCopilot.exe. No separate .NET install is needed.
+3. Open the gear (Settings). Enter each provider key, click Save, then Test Connection. Stored keys are encrypted for your Windows user and are not redisplayed.
+4. Minimum keys: Deepgram for live/WAV transcription; OpenRouter for A/B; OpenAI only for C. Refresh the OpenRouter model catalog and choose A/B models. Select None to disable any box.
+5. In Clear mode select your microphone and the output endpoint used by your call. Use headphones or an externally processed mic. Infer requires an already-mixed virtual microphone and manual diarized speaker mapping.
+6. Enter Context / Notes and optional collapsible meeting summary. Click Start session. Suggestions commit after detected THEM turns; Help Me Now forces them. Copy/Dismiss affect individual cards. Stop session when finished.
+7. Manual verification remains: Windows UI/DPAPI smoke execution, real provider access/quotas, microphone/loopback permissions, echo, device loss, stop/start and Realtime reconnect. Endpoint loopback includes other app audio; process loopback/AEC are not implemented. Window capture exclusion is best effort, not a security guarantee. Linux build/publish passed; Windows Actions status must still be checked because this development environment cannot read the private Actions API.
